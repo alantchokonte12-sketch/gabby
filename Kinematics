@@ -1,0 +1,32 @@
+curvilinear_motion.m 
+
+t = 0:0.1:5;
+
+x = 52*t - 9*t.^2;
+y = 125 - 5*t.^2;
+
+vx = 52 - 18*t;
+vy = -10*t;
+v  = sqrt(vx.^2 + vy.^2);
+
+[~, idx] = min(v);
+t_min = t(idx);
+x_min = x(idx);
+y_min = y(idx);
+
+fprintf('Min velocity at t = %.1f s, position (%.2f, %.2f) m\n', t_min, x_min, y_min);
+
+figure;
+
+subplot(1, 2, 1);
+plot(x, y);
+hold on;
+plot(x_min, y_min, 'r*', 'MarkerSize', 12);
+xlabel('x (m)'); ylabel('y (m)');
+title('Particle Position');
+legend('Path', 'Min Velocity Point');
+
+subplot(1, 2, 2);
+plot(t, v);
+xlabel('Time (s)'); ylabel('Velocity (m/s)');
+title('Velocity vs Time');
