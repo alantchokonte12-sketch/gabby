@@ -1,0 +1,70 @@
+Data Structure
+
+% Create the structure array
+CementBlocks(1) = struct('code', 'a', 'price', 850, 'height', 20, ...
+    'length', 20, 'depth', 20, 'density', 0.0015, 'compressive_strength', 120);
+CementBlocks(2) = struct('code', 'b', 'price', 1150, 'height', 35, ...
+    'length', 20, 'depth', 15, 'density', 0.0017, 'compressive_strength', 135);
+CementBlocks(3) = struct('code', 'c', 'price', 1000, 'height', 40, ...
+    'length', 25, 'depth', 10, 'density', 0.0014, 'compressive_strength', 100);
+CementBlocks(4) = struct('code', 'd', 'price', 1600, 'height', 50, ...
+    'length', 35, 'depth', 40, 'density', 0.0020, 'compressive_strength', 200);
+CementBlocks(5) = struct('code', 'e', 'price', 2000, 'height', 60, ...
+    'length', 40, 'depth', 50, 'density', 0.0012, 'compressive_strength', 110);
+
+% Part (a): Calculate average price
+CB_prices = [CementBlocks.price];
+average_of_prices = mean(CB_prices);
+fprintf('The average price of cement blocks is: %.2f\n', average_of_prices);
+fprintf('\n');
+
+% Part (b): Calculate mass for each block
+for i = 1:length(CementBlocks)
+    volume = CementBlocks(i).height * CementBlocks(i).length * CementBlocks(i).depth;
+    CementBlocks(i).mass = volume * CementBlocks(i).density;
+    fprintf('The mass of block %s is: %.2f kg\n', CementBlocks(i).code, CementBlocks(i).mass);
+end
+fprintf('\n');
+
+% Part (c): Check user's desired dimensions
+user_height = input('Enter the height of the block: ');
+user_length = input('Enter the length of the block: ');
+user_depth = input('Enter the depth of the block: ');
+fprintf('\n');
+
+block_found = false;
+for i = 1:length(CementBlocks)
+    if CementBlocks(i).height == user_height && ...
+       CementBlocks(i).length == user_length && ...
+       CementBlocks(i).depth == user_depth
+        fprintf('The block with dimensions (%.2f, %.2f, %.2f) is produced.\n', ...
+            user_height, user_length, user_depth);
+        fprintf('Price: %.2f\n', CementBlocks(i).price);
+        fprintf('Compressive Strength: %.2f\n', CementBlocks(i).compressive_strength);
+        block_found = true;
+        break;
+    end
+end
+
+if ~block_found
+    disp('No block corresponding to the dimensions entered is produced by the factory.');
+end
+fprintf('\n');
+
+% Part (d): Find blocks below avg price and above avg compressive strength
+compressiveStrengths = [CementBlocks.compressive_strength];
+average_compressiveStrengths = mean(compressiveStrengths);
+
+disp('Blocks with price below average and compressive strength above average:');
+count = 0;
+for i = 1:length(CementBlocks)
+    if CementBlocks(i).price < average_of_prices && ...
+       CementBlocks(i).compressive_strength > average_compressiveStrengths
+        fprintf('Block code: %s\n', CementBlocks(i).code);
+        count = count + 1;
+    end
+end
+
+if count == 0
+    disp('No blocks meet the criteria.');
+end
