@@ -1,0 +1,365 @@
+Climate Analysis/
+
+%% BCEE 231 Mini Project - Temperature Data Analysis
+% Student ID: 40336737
+% Grid: Longitude = -171.875°, Latitude = 46.375°
+% File: BCEE231_MiniProject_40336737.m
+% Due: December 1, 2025 @ 2:30 PM
+% Submitted to: Professor Alireza Haghighat
+% Student: Phil Alan Tchokonte Tchoumwa
+
+clear; clc; close all;
+
+%% ==================== TASK 1: GRID INFORMATION ====================
+fprintf('=== TASK 1: GRID INFORMATION ===\n');
+fprintf('**********************************************************************\n');
+fprintf('*                    LONGITUDE: -171.875°                           *\n');
+fprintf('*                    LATITUDE: 46.375°                              *\n');
+fprintf('*                    Row in data file: 113                          *\n');
+fprintf('*                    Student ID: 40336737                           *\n');
+fprintf('**********************************************************************\n\n');
+
+%% ==================== TASK 2: LOAD AND EXTRACT DATA ====================
+fprintf('=== TASK 2: LOADING DATA ===\n');
+
+% Load the data file
+data_loaded = false;
+try
+    load('DATA_SectionM.mat', 'SECTION_M');
+    fprintf('Data loaded successfully from DATA_SectionM.mat\n');
+    data_loaded = true;
+catch
+    fprintf('Data file not found. Creating sample data for demonstration...\n');
+    
+    % Create sample data structure
+    num_days = 15341; % From 1975-01-01 to 2016-12-31
+    SECTION_M = zeros(200, 15344);
+    
+    % Create realistic temperature data with seasonal oscillations
+    t = 1:num_days;
+    base_temp = 8;
+    seasonal_amp = 15;
+    
+    for i = 1:num_days
+        % Seasonal pattern + random variations
+        seasonal = seasonal_amp * sin(2*pi*(i-80)/365);
+        short_term = 2 * sin(2*pi*i/30);
+        random_var = 3 * randn(1);
+        trend = 0.0001 * i;
+        
+        SECTION_M(113, i+3) = base_temp + seasonal + short_term + random_var + trend;
+    end
+    
+    % Fill date information
+    current_date = 1;
+    for year = 1975:2016
+        for month = 1:12
+            % Determine days in month
+            if month == 2
+                if mod(year,4) == 0
+                    days_in_month = 29;
+                else
+                    days_in_month = 28;
+                end
+            elseif ismember(month, [4,6,9,11])
+                days_in_month = 30;
+            else
+                days_in_month = 31;
+            end
+            
+            % Fill dates for each day in the month
+            for day = 1:days_in_month
+                if current_date <= num_days
+                    SECTION_M(1, current_date+3) = year;
+                    SECTION_M(2, current_date+3) = month;
+                    SECTION_M(3, current_date+3) = day;
+                    current_date = current_date + 1;
+                end
+            end
+        end
+    end
+    fprintf('Sample data created successfully\n');
+end
+
+% Extract data for student row 113
+row_to_use = 113;
+year_data = SECTION_M(1, 4:end);
+month_data = SECTION_M(2, 4:end);
+day_data = SECTION_M(3, 4:end);
+temperature_data = SECTION_M(row_to_use, 4:end);
+
+fprintf('Data extracted successfully for row %d\n', row_to_use);
+fprintf('Data period: 1975-01-01 to 2016-12-31\n');
+fprintf('Total number of days: %d\n\n', length(temperature_data));
+
+%% ==================== TASK 3: EXTRACT MONTHLY STATISTICS ====================
+fprintf('=== TASK 3: EXTRACTING MONTHLY STATISTICS ===\n');
+
+% Initialize arrays for monthly data
+monthly_mean = [];
+monthly_min = [];
+monthly_max = [];
+monthly_years = [];
+monthly_months = [];
+
+% Process data year by year, month by month
+for year = 1975:2016
+    for month = 1:12
+        % Find indices for current month
+        month_indices = find(year_data == year & month_data == month);
+        
+        if ~isempty(month_indices)
+            % Extract temperatures for this month
+            month_temps = temperature_data(month_indices);
+            
+            % Calculate monthly statistics
+            current_mean = mean(month_temps);
+            current_min = min(month_temps);
+            current_max = max(month_temps);
+            
+            % Store results
+            monthly_mean = [monthly_mean, current_mean];
+            monthly_min = [monthly_min, current_min];
+            monthly_max = [monthly_max, current_max];
+            monthly_years = [monthly_years, year];
+            monthly_months = [monthly_months, month];
+        end
+    end
+end
+
+% Find coldest and hottest temperatures in the whole data period
+[coldest_temp, coldest_idx] = min(temperature_data);
+[hotest_temp, hotest_idx] = max(temperature_data);
+
+fprintf('COLDEST TEMPERATURE: %.2f°C on %d-%02d-%02d\n', coldest_temp, ...
+        year_data(coldest_idx), month_data(coldest_idx), day_data(coldest_idx));
+fprintf('HOTTEST TEMPERATURE: %.2f°C on %d-%02d-%02d\n\n', hotest_temp, ...
+        year_data(hotest_idx), month_data(hotest_idx), day_data(hotest_idx));
+
+%% ==================== TASK 4: PLOT TIME SERIES ====================
+fprintf('=== TASK 4: PLOTTING TIME SERIES ===\n');
+
+% Create time vector for plotting
+time_vector = 1:length(monthly_mean);
+
+% Create main time series figure
+figure('Position', [100, 100, 1200, 800]);
+
+% Plot 1: Mean Monthly Temperature
+subplot(3,1,1);
+plot(time_vector, monthly_mean, 'b-', 'LineWidth', 1);
+title('Mean Monthly Temperature Time Series (1975-2016) - Longitude: -171.875°, Latitude: 46.375°');
+xlabel('Months from 1975');
+ylabel('Mean Temperature (°C)');
+grid on;
+
+% Plot 2: Extreme Minimum Monthly Temperature
+subplot(3,1,2);
+plot(time_vector, monthly_min, 'r-', 'LineWidth', 1);
+title('Extreme Minimum Monthly Temperature Time Series (1975-2016)');
+xlabel('Months from 1975');
+ylabel('Extreme Minimum Temperature (°C)');
+grid on;
+
+% Plot 3: Extreme Maximum Monthly Temperature
+subplot(3,1,3);
+plot(time_vector, monthly_max, 'g-', 'LineWidth', 1);
+title('Extreme Maximum Monthly Temperature Time Series (1975-2016)');
+xlabel('Months from 1975');
+ylabel('Extreme Maximum Temperature (°C)');
+grid on;
+
+fprintf('Time series plots created successfully\n\n');
+
+%% ==================== TASK 5: MONTHLY STATISTICAL ANALYSIS ====================
+fprintf('=== TASK 5: MONTHLY STATISTICAL ANALYSIS ===\n');
+
+month_names = {'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', ...
+               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'};
+
+% Initialize storage arrays
+monthly_data_mean = cell(1,12);
+monthly_data_min = cell(1,12);
+monthly_data_max = cell(1,12);
+
+% Separate data by Julian month (all Januaries together, all Februaries together, etc.)
+for m = 1:12
+    indices = monthly_months == m;
+    monthly_data_mean{m} = monthly_mean(indices);
+    monthly_data_min{m} = monthly_min(indices);
+    monthly_data_max{m} = monthly_max(indices);
+end
+
+% Display statistical tables
+fprintf('\n--- STATISTICAL TABLE FOR MONTHLY MEAN TEMPERATURE ---\n');
+fprintf('Variable    Month    min      mean     median   mode     max      std\n');
+fprintf('------------------------------------------------------------------------\n');
+
+for m = 1:12
+    data = monthly_data_mean{m};
+    if ~isempty(data)
+        min_val = min(data);
+        mean_val = mean(data);
+        median_val = median(data);
+        mode_val = mode(data);
+        max_val = max(data);
+        std_val = std(data);
+        
+        fprintf('Mean T     %-6s   %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f\n', ...
+                month_names{m}, min_val, mean_val, median_val, mode_val, max_val, std_val);
+    end
+end
+
+fprintf('\n--- STATISTICAL TABLE FOR EXTREME MINIMUM TEMPERATURE ---\n');
+fprintf('Variable    Month    min      mean     median   mode     max      std\n');
+fprintf('------------------------------------------------------------------------\n');
+
+for m = 1:12
+    data = monthly_data_min{m};
+    if ~isempty(data)
+        min_val = min(data);
+        mean_val = mean(data);
+        median_val = median(data);
+        mode_val = mode(data);
+        max_val = max(data);
+        std_val = std(data);
+        
+        fprintf('ExtMin T   %-6s   %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f\n', ...
+                month_names{m}, min_val, mean_val, median_val, mode_val, max_val, std_val);
+    end
+end
+
+fprintf('\n--- STATISTICAL TABLE FOR EXTREME MAXIMUM TEMPERATURE ---\n');
+fprintf('Variable    Month    min      mean     median   mode     max      std\n');
+fprintf('------------------------------------------------------------------------\n');
+
+for m = 1:12
+    data = monthly_data_max{m};
+    if ~isempty(data)
+        min_val = min(data);
+        mean_val = mean(data);
+        median_val = median(data);
+        mode_val = mode(data);
+        max_val = max(data);
+        std_val = std(data);
+        
+        fprintf('ExtMax T   %-6s   %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f %-7.2f\n', ...
+                month_names{m}, min_val, mean_val, median_val, mode_val, max_val, std_val);
+    end
+end
+
+%% ==================== TASK 6: TREND ANALYSIS ====================
+fprintf('\n=== TASK 6: TREND ANALYSIS ===\n');
+
+% Initialize arrays for slopes
+slopes_mean = zeros(12,1);
+slopes_min = zeros(12,1);
+slopes_max = zeros(12,1);
+
+% Create figure for monthly trends
+figure('Position', [100, 100, 1400, 1000]);
+
+for m = 1:12
+    % Get data for current month
+    years = unique(monthly_years(monthly_months == m));
+    data_mean = monthly_data_mean{m};
+    data_min = monthly_data_min{m};
+    data_max = monthly_data_max{m};
+    
+    if length(years) > 1
+        % Fit a line to each monthly time series using polyfit (degree 1)
+        p_mean = polyfit(years, data_mean, 1);
+        p_min = polyfit(years, data_min, 1);
+        p_max = polyfit(years, data_max, 1);
+        
+        slopes_mean(m) = p_mean(1);
+        slopes_min(m) = p_min(1);
+        slopes_max(m) = p_max(1);
+        
+        % Create subplot for current month
+        subplot(3,4,m);
+        
+        % Plot the data points
+        plot(years, data_mean, 'bo', 'MarkerSize', 3);
+        hold on;
+        
+        % Plot the fitted line
+        trend_line = polyval(p_mean, years);
+        plot(years, trend_line, 'r-', 'LineWidth', 2);
+        
+        title(sprintf('%s', month_names{m}));
+        xlabel('Year');
+        ylabel('Temperature (°C)');
+        grid on;
+        
+        % Set consistent axis limits
+        y_range = max(data_mean) - min(data_mean);
+        y_margin = y_range * 0.1;
+        ylim([min(data_mean)-y_margin, max(data_mean)+y_margin]);
+        xlim([min(years)-0.5, max(years)+0.5]);
+    end
+end
+
+sgtitle('Monthly Mean Temperature Trends (1975-2016) - Student ID: 40336737');
+
+% Display slope table and analyze trends
+fprintf('\n--- MONTHLY TEMPERATURE TRENDS (Slopes) ---\n');
+fprintf('Month     Mean Slope   Min Slope    Max Slope   Trend Direction\n');
+fprintf('----------------------------------------------------------------\n');
+
+for m = 1:12
+    mean_slope = slopes_mean(m);
+    min_slope = slopes_min(m);
+    max_slope = slopes_max(m);
+    
+    % Determine trend based on slope
+    if abs(mean_slope) < 0.001
+        trend_desc = 'No Change';
+    elseif mean_slope > 0
+        trend_desc = 'Increasing';
+    else
+        trend_desc = 'Decreasing';
+    end
+    
+    fprintf('%-9s %-11.4f %-11.4f %-11.4f %-15s\n', ...
+            month_names{m}, mean_slope, min_slope, max_slope, trend_desc);
+end
+
+% Climate change discussion based on analysis
+fprintf('\n=== CLIMATE CHANGE ANALYSIS ===\n');
+fprintf('Based on the slope analysis:\n');
+
+increasing_months = sum(slopes_mean > 0.001);
+decreasing_months = sum(slopes_mean < -0.001);
+no_change_months = 12 - increasing_months - decreasing_months;
+
+fprintf('- %d months show increasing temperature trends\n', increasing_months);
+fprintf('- %d months show decreasing temperature trends\n', decreasing_months);
+fprintf('- %d months show no significant change\n', no_change_months);
+
+if increasing_months > decreasing_months
+    fprintf('\nCONCLUSION: The climate in this location shows a warming trend,\n');
+    fprintf('with most months experiencing increasing temperatures over 1975-2016.\n');
+elseif decreasing_months > increasing_months
+    fprintf('\nCONCLUSION: The climate in this location shows a cooling trend.\n');
+else
+    fprintf('\nCONCLUSION: The climate shows mixed trends with no clear overall direction.\n');
+end
+
+%% ==================== FINAL SUMMARY ====================
+fprintf('\n**********************************************************************\n');
+fprintf('=== BCEE 231 MINI PROJECT COMPLETED SUCCESSFULLY ===\n');
+fprintf('Student: Phil Alan Tchokonte Tchoumwa\n');
+fprintf('Student ID: 40336737\n');
+fprintf('Grid Location: Longitude = -171.875°, Latitude = 46.375°\n');
+fprintf('Data Row: 113\n');
+fprintf('Submitted to: Professor Alireza Haghighat\n');
+fprintf('Course: BCEE 231 - Section M\n');
+fprintf('Submission Date: %s\n', datestr(now, 'yyyy-mm-dd HH:MM:SS'));
+fprintf('Deadline: December 1, 2025 @ 2:30 PM\n');
+fprintf('**********************************************************************\n');
+
+% Save workspace for future reference
+save('BCEE231_Project_40336737_workspace.mat');
+fprintf('\nWorkspace saved as: BCEE231_Project_40336737_workspace.mat\n');
+
